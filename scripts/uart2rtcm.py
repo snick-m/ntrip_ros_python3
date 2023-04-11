@@ -7,19 +7,22 @@ import pyubx2
 from rtcm_msgs.msg import Message
 
 if __name__ == "__main__":
-    rospy.init_node("uart2rtcm")
-    rospy.set_param("debug", rospy.get_param("~debug", 0))
+    rospy.init_node("uart2rtcm", log_level=rospy.get_param("~debug", 0))
 
     rtcm_topic = rospy.Publisher("rtcm", Message, queue_size=10)
 
     serial_port = rospy.get_param("~port", "/dev/ttyACM0")
-    rospy.loginfo("Using serial port: " + serial_port)
     ubx = serial.Serial(serial_port, 9600, timeout=1)
+
+    rospy.loginfo("Using serial port: " + serial_port)
 
     rtcm_reader = pyubx2.UBXReader(ubx, protfilter=4)
 
     while not rospy.is_shutdown():
         (raw_data, parsed_data) = rtcm_reader.read()
+        rospy.logdebug(len(raw_data))
+
+        rospy.loginfo(parsed_data)
 
         msg = Message()
         msg.message = raw_data
